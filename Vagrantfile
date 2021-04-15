@@ -64,10 +64,10 @@ deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main
 FFF
 
 
-version=1.21.0-00
+export  KUBE_VERSION=1.21.0-00
 apt-get -qq update
 #apt-get -qq install -y kubelet kubeadm kubectl
-apt-get install -qy kubelet=$version kubectl=$version kubeadm=$version>
+apt-get install -qy kubelet=$KUBE_VERSION kubectl=$KUBE_VERSION kubeadm=$KUBE_VERSION
 
 SCRIPT
 
@@ -75,8 +75,10 @@ $provision_master_node = <<-SHELL
 OUTPUT_FILE=/vagrant/join.sh
 rm -rf $OUTPUT_FILE
 
-# Start cluster
+# pull docker images 
 sudo bash /vagrant/pull_k8s_images.sh
+
+# Start cluster
 sudo kubeadm init  --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16 | grep "kubeadm join" > ${OUTPUT_FILE}
 chmod +x $OUTPUT_FILE
 
@@ -89,7 +91,7 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.10"' | sudo tee -a /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 
 # Configure flannel
-#curl -o kube-flannel.yml https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+#curl -o kube-flannel.yml https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 cp -v /vagrant/kube-flannel.yml  kube-flannel.yml  
 sed -i.bak 's|"/opt/bin/flanneld",|"/opt/bin/flanneld", "--iface=enp0s8",|' kube-flannel.yml
 kubectl create -f kube-flannel.yml
