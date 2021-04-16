@@ -79,7 +79,7 @@ rm -rf $OUTPUT_FILE
 sudo bash /vagrant/pull_k8s_images.sh
 
 # Start cluster
-sudo kubeadm init  --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16 | grep "kubeadm join" > ${OUTPUT_FILE}
+sudo kubeadm init  --apiserver-advertise-address=10.0.0.10 --pod-network-cidr=10.244.0.0/16 |tee kubeadm-init.log | grep -C 1 "kubeadm join" > ${OUTPUT_FILE}
 chmod +x $OUTPUT_FILE
 
 # Configure kubectl
@@ -93,7 +93,6 @@ echo 'Environment="KUBELET_EXTRA_ARGS=--node-ip=10.0.0.10"' | sudo tee -a /etc/s
 # Configure flannel
 #curl -o kube-flannel.yml https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 cp -v /vagrant/kube-flannel.yml  kube-flannel.yml  
-sed -i.bak 's|"/opt/bin/flanneld",|"/opt/bin/flanneld", "--iface=enp0s8",|' kube-flannel.yml
 kubectl create -f kube-flannel.yml
 
 sudo systemctl daemon-reload
